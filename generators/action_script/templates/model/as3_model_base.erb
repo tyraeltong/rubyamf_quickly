@@ -1,21 +1,27 @@
 /*
 * WARNING:  DO NOT MODIFY THIS GENERATED CLASS. ANY CHANGES WILL BE LOST.
-*           ADD CUSTOM MODIFICATIONS TO <%= as3_class.name %>.as  
+*           ADD CUSTOM MODIFICATIONS TO <%= as3_class.name %>.as
 */
 package <%= as3_class.base_package %>
 {
 	import <%= "#{[base_class_package,'base.Base'].join('.')};" %>
+	<% as3_class.associations.each { |assoc| %>
+	import <%= "#{as3_class.package}.#{assoc.static_type};" %>
+	<% } %>
 	import <%= "#{as3_class.package}.#{as3_class.name};" %>
 	import <%= "#{helper_package}.Hash;" %>
 
-  import flash.utils.getDefinitionByName;
-  import flash.utils.getQualifiedClassName;
-	
+	import mx.collections.ArrayCollection;
+	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
+
 	[Bindable]
 	public class <%= as3_class.base_name %> extends Base
 	{
 	  	<% as3_class.properties.each {|property| %>private var _<%= property.name %>:<%= property.static_type %><%= ['lock_version',"lockVersion"].include?( property.name ) ? ' = 0' : '' %>;
 	  	<% } %>
+		<% as3_class.associations.each {|assoc| %>private var _<%= assoc.name %>:<%= assoc.singular? ? assoc.static_type : as3_class.array_string %><%= ['lock_version', "lockVersion"].include?(assoc.name)? ' = 0' : '' %>;
+		<% } %>
 
 		/**
 		 * Create a Hash representing this object's persistent properties.
@@ -25,10 +31,10 @@ package <%= as3_class.base_package %>
 			var params:Hash = new Hash();
 			<% as3_class.properties.each do |property| %>
 			params['<%= property.name %>'] = this.<%= property.accessor %>;<% end %>
-			
+
 			return params.remove(exclude);
 		}
-		
+
 		/**
 		 * Create a new, duplicate instance of this <%= as3_class.base_name %>; copying all properties to the new instance by reference.
 		 */
@@ -36,10 +42,11 @@ package <%= as3_class.base_package %>
 			var cloned:<%= as3_class.base_name %> = new (getDefinitionByName(getQualifiedClassName(this))) as <%= as3_class.base_name %>;
 			<% as3_class.properties.each do |property| unless property.accessor.eql? 'id' %>
 			cloned.<%= property.accessor %> = this.<%= property.accessor %>;<% end end %>
-
+			<% as3_class.associations.each { |assoc| %>
+			cloned.<%= assoc.accessor %> = this.<%= assoc.accessor %>;<%}%>
 			return cloned;
 		}
-		
+
 		/**
 		 * Test this <%= as3_class.base_name %>'s property values against another object determine equality
 		 */
@@ -47,22 +54,35 @@ package <%= as3_class.base_package %>
 			return obj != null && obj is <%= as3_class.base_name %> <% as3_class.properties.each do |property| unless property.accessor.eql? 'id' %>
 					&& obj.<%= property.accessor %> == this.<%= property.accessor %><% end end %>;
 		}
-		
+
 		/**
 		 * Assign the values of another <%= as3_class.base_name %> to this <%= as3_class.base_name %>.
 		 */
 		public function merge( obj:<%= as3_class.base_name %> ):void { <% as3_class.properties.each do |property| unless property.accessor.eql? 'id'%>
 			this.<%= property.accessor %> = obj.<%= property.accessor %>;<% end end %>
+			<% as3_class.associations.each { |assoc| %>
+			this.<%= assoc.accessor %> = obj.<%= assoc.accessor %>;<% } %>
 		}
 		<% as3_class.properties.each do |property| %>
 		// ACCESSORS: <%= property.name %>
 		public function get <%= property.accessor %>():<%= property.static_type %> {
 			return this._<%= property.name %>;
 		}
-		
+
 		public function set <%= property.accessor %>(value:<%= property.static_type %>):void {
 			this._<%= property.name %> = value;
 		}
 		<% end %>
+		<% as3_class.associations.each { |assoc| %>
+		// ACCESSORS: <%= assoc.name %>
+		public function get <%= assoc.accessor %>():<%= assoc.singular? ? assoc.static_type : as3_class.array_string %>{
+		    return this._<%= assoc.name %>;
+		}
+
+		public function set <%= assoc.accessor %>(value:<%= assoc.singular? ? assoc.static_type : as3_class.array_string %>){
+		    this._<%= assoc.name %> = value;
+		}
+		<% } %>
+
 	}
 }
